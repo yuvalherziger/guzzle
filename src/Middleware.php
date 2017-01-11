@@ -47,22 +47,23 @@ final class Middleware
      * Middleware that throws exceptions for 4xx or 5xx responses when the
      * "http_error" request option is set to true.
      *
+     * @param boolean $verbose Lets exceptions know whether or not to use verbose output
      * @return callable Returns a function that accepts the next handler.
      */
-    public static function httpErrors()
+    public static function httpErrors($verbose = false)
     {
-        return function (callable $handler) {
-            return function ($request, array $options) use ($handler) {
+        return function (callable $handler) use ($verbose) {
+            return function ($request, array $options) use ($handler, $verbose) {
                 if (empty($options['http_errors'])) {
                     return $handler($request, $options);
                 }
                 return $handler($request, $options)->then(
-                    function (ResponseInterface $response) use ($request, $handler) {
+                    function (ResponseInterface $response) use ($request, $handler, $verbose) {
                         $code = $response->getStatusCode();
                         if ($code < 400) {
                             return $response;
                         }
-                        throw RequestException::create($request, $response);
+                        throw RequestException::create($request, $response, null, [], $verbose);
                     }
                 );
             };

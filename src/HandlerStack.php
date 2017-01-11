@@ -33,12 +33,13 @@ class HandlerStack
      *                          handler is provided, the best handler for your
      *                          system will be utilized.
      *
+     * @param boolean $verbose  Lets exceptions know whether or not to use verbose output
      * @return HandlerStack
      */
-    public static function create(callable $handler = null)
+    public static function create(callable $handler = null, $verbose = false)
     {
         $stack = new self($handler ?: choose_handler());
-        $stack->push(Middleware::httpErrors(), 'http_errors');
+        $stack->push(Middleware::httpErrors($verbose), 'http_errors');
         $stack->push(Middleware::redirect(), 'allow_redirects');
         $stack->push(Middleware::cookies(), 'cookies');
         $stack->push(Middleware::prepareBody(), 'prepare_body');

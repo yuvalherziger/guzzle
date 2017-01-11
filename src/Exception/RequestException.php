@@ -66,7 +66,8 @@ class RequestException extends TransferException
         RequestInterface $request,
         ResponseInterface $response = null,
         \Exception $previous = null,
-        array $ctx = []
+        array $ctx = [],
+        $verbose = false
     ) {
         if (!$response) {
             return new self(
@@ -104,7 +105,7 @@ class RequestException extends TransferException
             $response->getReasonPhrase()
         );
 
-        $summary = static::getResponseBodySummary($response);
+        $summary = static::getResponseBodySummary($response, $verbose);
 
         if ($summary !== null) {
             $message .= ":\n{$summary}\n";
@@ -122,7 +123,7 @@ class RequestException extends TransferException
      *
      * @return string|null
      */
-    public static function getResponseBodySummary(ResponseInterface $response)
+    public static function getResponseBodySummary(ResponseInterface $response, $verbose = false)
     {
         $body = $response->getBody();
 
@@ -135,13 +136,18 @@ class RequestException extends TransferException
         if ($size === 0) {
             return null;
         }
+        if (!$verbose) {
+            $summary = $body->read(120);
+            $body->rewind();
 
-        $summary = $body->read(120);
-        $body->rewind();
-
-        if ($size > 120) {
-            $summary .= ' (truncated...)';
+            if ($size > 120) {
+                $summary .= ' (truncated...)';
+            }
+        } else {
+            $summary = $body->read(6400);
+            $body->rewind();
         }
+
 
         // Matches any printable character, including unicode characters:
         // letters, marks, numbers, punctuation, spacing, and separators.
